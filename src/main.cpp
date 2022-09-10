@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
 
 const char* ssid     = "eduram";         // The SSID (name) of the Wi-Fi network you want to connect to
 const char* password = "zarazcipodam";     // The password of the Wi-Fi network
@@ -8,9 +10,41 @@ int inputPin = 4;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
 
+const char* address = "http://192.168.88.137/play/uwu";
+int time_delay = 3*1000;
+
 //This happens when movement is detected
 void movement_detected() {
   Serial.println("Motion detected!");
+  // Send an HTTP POST request depending on timerDelay
+  //Check WiFi connection status
+  if(WiFi.status()== WL_CONNECTED){
+    WiFiClient client;
+    HTTPClient http;
+      
+    // Your Domain name with URL path or IP address with path
+    http.begin(client, address);
+      
+    // Send HTTP GET request
+    int httpResponseCode = http.GET();
+      
+    if (httpResponseCode>0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    }
+    else {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+    // Free resources
+    http.end();
+  }
+  else {
+    Serial.println("WiFi Disconnected");
+  }
+  delay(time_delay);
 }
 //This happens when movement just ended
 void movement_ended() {
